@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>存股現金流 (代號分離版)</title>
+    <title>存股現金流規劃 (進度空白版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -161,7 +161,7 @@
         .section-target .section-title { color: var(--target-text); margin-bottom: 0; }
         
         .btn-toggle-target { background: white; border: 1px solid #90caf9; color: var(--target-text); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .btn-toggle-target.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .btn-toggle-target.active { background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; }
 
         .data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
         .data-group { display: flex; flex-direction: column; gap: 4px; }
@@ -241,24 +241,24 @@
 </div>
 
 <script>
-    // 資料結構更新：加入 symbol 欄位
+    // 預設資料：目前進度已清空 (設為0)，目標保留
     const defaultData = [
         { 
             id: 1, symbol: '00919', name: '群益台灣精選高息', maxDiv: 0.72, 
-            currShares: 10, currPrice: 23.3, currDiv: 0.54,
-            targetShares: 50, targetPrice: 23.0, targetDiv: 0.72,
+            currShares: 0, currPrice: 0, currDiv: 0,
+            targetShares: 27, targetPrice: 23.0, targetDiv: 0.72,
             months: [3, 6, 9, 12], isLocked: true 
         },
         { 
             id: 2, symbol: '00878', name: '國泰永續高股息', maxDiv: 0.55, 
-            currShares: 15, currPrice: 22.8, currDiv: 0.42,
-            targetShares: 60, targetPrice: 22.5, targetDiv: 0.55,
+            currShares: 0, currPrice: 0, currDiv: 0,
+            targetShares: 36, targetPrice: 22.0, targetDiv: 0.55,
             months: [2, 5, 8, 11], isLocked: true 
         },
         { 
             id: 3, symbol: '0056', name: '元大高股息', maxDiv: 1.07, 
-            currShares: 5, currPrice: 37.5, currDiv: 0.86,
-            targetShares: 30, targetPrice: 37.0, targetDiv: 1.0,
+            currShares: 0, currPrice: 0, currDiv: 0,
+            targetShares: 18, targetPrice: 35.0, targetDiv: 1.07,
             months: [1, 4, 7, 10], isLocked: true 
         }
     ];
@@ -351,9 +351,9 @@
                 <div class="section-current">
                     <div class="section-title">📊 目前進度</div>
                     <div class="data-grid">
-                        <div class="data-group"><label>張數</label><input class="input-val" type="number" value="${item.currShares}" onchange="update(${index}, 'currShares', this.value)"></div>
-                        <div class="data-group"><label>均價</label><input class="input-val" type="number" value="${item.currPrice}" step="0.1" onchange="update(${index}, 'currPrice', this.value)"></div>
-                        <div class="data-group"><label>配息</label><input class="input-val" type="number" value="${item.currDiv}" step="0.01" onchange="update(${index}, 'currDiv', this.value)"></div>
+                        <div class="data-group"><label>張數</label><input class="input-val" type="number" value="${item.currShares||''}" placeholder="0" onchange="update(${index}, 'currShares', this.value)"></div>
+                        <div class="data-group"><label>均價</label><input class="input-val" type="number" value="${item.currPrice||''}" placeholder="0" step="0.1" onchange="update(${index}, 'currPrice', this.value)"></div>
+                        <div class="data-group"><label>配息</label><input class="input-val" type="number" value="${item.currDiv||''}" placeholder="0" step="0.01" onchange="update(${index}, 'currDiv', this.value)"></div>
                         <div class="data-group"><label>實領</label><input class="input-val" style="border:none; color:${cTax>0?'#c0392b':'#27ae60'}" value="$${cNet}" disabled></div>
                     </div>
                     <div class="result-box">
@@ -415,7 +415,6 @@
             }
             mGrid += '</div>';
             
-            // 顯示名稱 (代號與名稱分離)
             const displaySymbol = item.symbol ? item.symbol : '';
             const displayName = item.name ? item.name : '';
 
@@ -448,7 +447,6 @@
     }
 
     function update(i, k, v) { 
-        // 修正更新邏輯
         if (k === 'symbol' || k === 'name') portfolio[i][k] = v;
         else portfolio[i][k] = parseFloat(v) || 0; 
         renderEditMode(); 
@@ -467,8 +465,8 @@
 
     function addNew() { portfolio.push({ id: Date.now(), symbol: '', name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
     function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
-    function saveData() { localStorage.setItem('etf_split_v1', JSON.stringify(portfolio)); }
-    function loadData() { const d = localStorage.getItem('etf_split_v1'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
+    function saveData() { localStorage.setItem('etf_split_v2', JSON.stringify(portfolio)); }
+    function loadData() { const d = localStorage.getItem('etf_split_v2'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
     function exportImage() { 
         const fab = document.getElementById('fabActions'); fab.style.display='none';
         html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#f0f2f5" }).then(c => {
