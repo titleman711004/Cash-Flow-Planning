@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>存股現金流規劃 (版面完美修復版)</title>
+    <title>存股現金流規劃 (完美版面修復)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -87,26 +87,26 @@
         /* --- 優化表格排版 --- */
         .summary-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); table-layout: fixed; }
         
-        /* 調整欄位寬度比例 */
-        .summary-table th:nth-child(1) { width: 35%; } /* 標的名稱加寬 */
-        .summary-table th:nth-child(2) { width: 40%; } /* 月份網格 */
-        .summary-table th:nth-child(3) { width: 25%; } /* 金額 */
+        /* 調整欄位寬度: 總和 100% */
+        .summary-table th:nth-child(1) { width: 33%; } /* 標的 */
+        .summary-table th:nth-child(2) { width: 32%; } /* 月份 */
+        .summary-table th:nth-child(3) { width: 35%; } /* 金額 - 加大寬度防止切到 */
 
-        .summary-table th { background: #f8f9fa; padding: 12px 8px; text-align: left; color: #666; font-size: 0.85rem; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .summary-table td { padding: 12px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .summary-table th { background: #f8f9fa; padding: 12px 6px; text-align: left; color: #666; font-size: 0.85rem; border-bottom: 1px solid #eee; white-space: nowrap; }
+        .summary-table td { padding: 12px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
         
-        /* 強制不換行，若太長則顯示 ... */
         .stock-name { 
             font-weight: bold; color: var(--primary); font-size: 0.95rem; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* 單行顯示，太長... */
         }
+        .stock-div-info { font-size: 0.75rem; color: #888; margin-top: 4px; }
         
         .month-grid-view { 
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; 
-            max-width: 180px; /* 稍微縮小寬度 */
+            max-width: 160px; /* 限制寬度 */
         }
         .m-dot { 
-            width: 18px; height: 18px; border-radius: 50%; 
+            width: 16px; height: 16px; border-radius: 50%; 
             background: #f0f0f0; color: #ccc; 
             font-size: 0.6rem; display: flex; justify-content: center; align-items: center;
         }
@@ -116,27 +116,27 @@
         #edit-mode { display: block; }
         .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; margin-bottom: 20px; }
 
-        /* 標題欄優化：Flexbox 讓輸入框自適應 */
+        /* 編輯標題列：允許換行，確保文字不被遮擋 */
         .card-header { 
             background-color: #f8f9fa; padding: 12px 15px; border-bottom: 1px solid #eee; 
             display: flex; align-items: center; gap: 8px; 
-            flex-wrap: nowrap; /* 確保不換行 */
+            flex-wrap: wrap; /* 關鍵：允許換行 */
         }
         .header-title { 
-            flex: 1; /* 佔滿剩餘空間 */
-            min-width: 0; /* 允許縮小 */
+            flex-grow: 1; /* 佔滿剩餘空間 */
+            min-width: 200px; /* 至少 200px 寬，不夠就換行 */
         }
         .header-title input { 
             width: 100%; font-size: 1.1rem; font-weight: bold; color: var(--primary); 
             border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .header-info { 
             white-space: nowrap; font-size: 0.85rem; color: #666; background: #fff; 
             padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; 
-            display: flex; align-items: center; gap: 5px; flex-shrink: 0; 
+            display: flex; align-items: center; gap: 5px; 
+            margin-left: auto; /* 靠右對齊 */
         }
-        .input-max-div { width: 40px; border: none; border-bottom: 1px solid #ccc; text-align: center; font-weight: bold; }
+        .input-max-div { width: 45px; border: none; border-bottom: 1px solid #ccc; text-align: center; font-weight: bold; }
 
         .month-selector { padding: 10px 15px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .ms-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #ddd; color: #aaa; font-size: 0.7rem; display: flex; justify-content: center; align-items: center; cursor: pointer; }
@@ -210,7 +210,7 @@
         <div style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
             <div class="chart-header" style="padding-top:15px; border:none;">📋 配息總表</div>
             <table class="summary-table">
-                <thead><tr><th>標的</th><th>配息月份</th><th style="text-align:right;">現況/目標(年)</th></tr></thead>
+                <thead><tr><th>標的</th><th>配息月份</th><th style="text-align:right;">年領 (現/目)</th></tr></thead>
                 <tbody id="summaryTableBody"></tbody>
             </table>
         </div>
@@ -406,7 +406,10 @@
             mGrid += '</div>';
             
             tr.innerHTML = `
-                <td><div class="stock-name">${item.name}</div></td>
+                <td>
+                    <div class="stock-name">${item.name}</div>
+                    <div class="stock-div-info">配息: $${item.currDiv}</div>
+                </td>
                 <td>${mGrid}</td>
                 <td style="text-align:right">
                     <div style="font-size:0.9rem; font-weight:bold;">$${annual.toLocaleString()}</div>
@@ -444,8 +447,8 @@
 
     function addNew() { portfolio.push({ id: Date.now(), name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
     function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
-    function saveData() { localStorage.setItem('etf_final_v5', JSON.stringify(portfolio)); }
-    function loadData() { const d = localStorage.getItem('etf_final_v5'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
+    function saveData() { localStorage.setItem('etf_final_v6', JSON.stringify(portfolio)); }
+    function loadData() { const d = localStorage.getItem('etf_final_v6'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
     function exportImage() { 
         const fab = document.getElementById('fabActions'); fab.style.display='none';
         html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#f0f2f5" }).then(c => {
