@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>存股現金流規劃 (完全體)</title>
+    <title>存股現金流規劃 (修正優化版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -75,36 +75,72 @@
         .chart-section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .chart-header { font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
         
-        .bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 150px; padding-bottom: 5px; gap: 5px; }
-        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
-        .bar { width: 80%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 4px; opacity: 0.8; }
-        .bar-val { font-size: 0.75rem; color: #555; font-weight: bold; margin-bottom: 4px; }
-        .bar-lbl { font-size: 0.8rem; color: #999; margin-top: 5px; }
+        /* 優化後的長條圖 */
+        .bar-chart { 
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            height: 180px; /* 加高一點 */
+            padding-bottom: 5px; gap: 8px; /* 增加間距 */
+        }
+        .bar-col { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
+            height: 100%; 
+        }
+        .bar { 
+            width: 100%; /* 佔滿欄位寬度 */
+            max-width: 30px; /* 但不要太粗 */
+            background: var(--accent); border-radius: 4px 4px 0 0; min-height: 4px; opacity: 0.8; 
+            transition: height 0.3s ease;
+        }
+        .bar-val { font-size: 0.7rem; color: #555; font-weight: bold; margin-bottom: 4px; }
+        .bar-lbl { 
+            font-size: 0.75rem; color: #999; margin-top: 8px; 
+            white-space: nowrap; /* 防止文字換行 */
+        }
 
+        /* 優化後的配息總表 */
         .summary-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .summary-table th { background: #f8f9fa; padding: 12px; text-align: left; color: #666; font-size: 0.9rem; border-bottom: 1px solid #eee; }
-        .summary-table td { padding: 15px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-        .stock-name { font-weight: bold; color: var(--primary); font-size: 1rem; }
-        .month-tags { display: flex; gap: 4px; flex-wrap: wrap; }
-        .m-tag { background: #e3f2fd; color: var(--accent); font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .summary-table th { background: #f8f9fa; padding: 12px; text-align: left; color: #666; font-size: 0.85rem; border-bottom: 1px solid #eee; }
+        .summary-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .stock-name { font-weight: bold; color: var(--primary); font-size: 0.95rem; line-height: 1.4; }
+        
+        /* 橫向排列的配息月份標籤 */
+        .month-tags { 
+            display: flex; gap: 4px; flex-wrap: wrap; 
+            justify-content: flex-start; /* 靠左對齊 */
+        }
+        .m-tag { 
+            background: #e3f2fd; color: var(--accent); 
+            font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;
+            display: inline-block; /* 確保不會換行壞掉 */
+        }
 
         /* --- 編輯模式 --- */
         #edit-mode { display: block; }
         .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; margin-bottom: 20px; }
 
-        /* 卡片標題 */
         .card-header { background-color: #f8f9fa; padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
         .header-title { flex-grow: 1; min-width: 0; }
         .header-title input { width: 100%; font-size: 1.1rem; font-weight: bold; color: var(--primary); border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0; }
         .header-info { white-space: nowrap; font-size: 0.85rem; color: #666; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
         .input-max-div { width: 50px; border: none; border-bottom: 1px solid #ccc; text-align: center; font-weight: bold; }
 
-        /* 月份與設定 */
+        /* 月份選擇器與下拉選單 */
         .month-selector { padding: 10px 15px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .ms-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #ddd; color: #aaa; font-size: 0.7rem; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .ms-btn.active { background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; }
+        
+        /* 下拉選單樣式 */
+        .quick-select {
+            margin-left: auto;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #555;
+            background: #f9f9f9;
+            cursor: pointer;
+        }
 
-        /* 內容區塊 */
         .section-current { padding: 15px; }
         .section-target { background-color: var(--target-bg); padding: 15px; border-top: 1px solid #bbdefb; }
         
@@ -172,7 +208,7 @@
         <div style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
             <div class="chart-header" style="padding-top:15px; border:none;">📋 配息總表</div>
             <table class="summary-table">
-                <thead><tr><th style="width:35%">標的名稱</th><th>配息月份</th><th style="width:25%; text-align:right;">現況年領</th><th style="width:25%; text-align:right; color:#f1c40f;">目標年領</th></tr></thead>
+                <thead><tr><th style="width:30%">標的</th><th style="width:40%">配息月份</th><th style="width:30%; text-align:right;">現況/目標 (年)</th></tr></thead>
                 <tbody id="summaryTableBody"></tbody>
             </table>
         </div>
@@ -249,20 +285,18 @@
         let totalCurrent = 0; let totalTarget = 0;
 
         portfolio.forEach((item, index) => {
-            // 現況計算
+            // 計算
             const cG = Math.round(item.currShares * 1000 * item.currDiv);
             let cTax = 0; if (cG > 20000) cTax = Math.floor(cG * 0.0211);
             const cNet = cG - cTax;
             totalCurrent += cNet * item.months.length;
 
-            // 目標計算
             const tG = Math.round(item.targetShares * 1000 * item.targetDiv);
             let tTax = 0; if (tG > 20000) tTax = Math.floor(tG * 0.0211);
             const tNet = tG - tTax;
             totalTarget += tNet * item.months.length;
             const tCost = Math.round(item.targetShares * 1000 * item.targetPrice);
 
-            // HTML
             const div = document.createElement('div');
             div.className = 'card';
             
@@ -292,7 +326,14 @@
                 <div class="month-selector">
                     <span style="font-size:0.8rem; color:#666;">配息月:</span>
                     <div style="display:flex; gap:4px; flex-wrap:wrap;">${monthBtns}</div>
-                    <button style="margin-left:auto; font-size:0.7rem; border:1px solid #ddd; background:#eee; border-radius:10px;" onclick="quickSetMonths(${index})">快速</button>
+                    
+                    <select class="quick-select" onchange="quickSetMonths(${index}, this.value)">
+                        <option value="" disabled selected>快速設定</option>
+                        <option value="s1">1, 4, 7, 10</option>
+                        <option value="s2">2, 5, 8, 11</option>
+                        <option value="s3">3, 6, 9, 12</option>
+                        <option value="m">月月配 (1-12)</option>
+                    </select>
                 </div>
 
                 <div class="section-current">
@@ -348,8 +389,6 @@
             item.months.forEach(m => monthlySum[m] += cNet);
             
             const annual = cNet * item.months.length;
-            
-            // 目標年領
             const tG = Math.round(item.targetShares * 1000 * item.targetDiv);
             let tTax = 0; if (tG > 20000) tTax = Math.floor(tG * 0.0211);
             const tNet = tG - tTax;
@@ -362,8 +401,10 @@
             tr.innerHTML = `
                 <td><div class="stock-name">${item.name}</div></td>
                 <td><div class="month-tags">${mTags}</div></td>
-                <td><div class="year-income">$${annual.toLocaleString()}</div></td>
-                <td><div class="year-income" style="color:#f1c40f;">$${tAnnual.toLocaleString()}</div></td>
+                <td style="text-align:right">
+                    <div style="font-size:0.9rem; font-weight:bold;">$${annual.toLocaleString()}</div>
+                    <div style="font-size:0.8rem; color:#f1c40f;">$${tAnnual.toLocaleString()}</div>
+                </td>
             `;
             tbody.appendChild(tr);
         });
@@ -385,20 +426,25 @@
     function update(i, k, v) { if(k==='name') portfolio[i][k]=v; else portfolio[i][k]=parseFloat(v)||0; renderEditMode(); }
     function toggleMonth(i, m) { const idx = portfolio[i].months.indexOf(m); if(idx>-1) portfolio[i].months.splice(idx,1); else portfolio[i].months.push(m); renderEditMode(); }
     function toggleLock(i) { portfolio[i].isLocked = !portfolio[i].isLocked; renderEditMode(); }
-    function quickSetMonths(i) {
-        const p = portfolio[i]; const s=[1,4,7,10], s2=[2,5,8,11], s3=[3,6,9,12];
-        const c = JSON.stringify(p.months.sort());
-        if(c==JSON.stringify(s)) p.months=s2; else if(c==JSON.stringify(s2)) p.months=s3; else if(c==JSON.stringify(s3)) p.months=[1,2,3,4,5,6,7,8,9,10,11,12]; else p.months=s;
+    
+    // 下拉選單邏輯
+    function quickSetMonths(i, val) {
+        if(val === 's1') portfolio[i].months = [1,4,7,10];
+        else if(val === 's2') portfolio[i].months = [2,5,8,11];
+        else if(val === 's3') portfolio[i].months = [3,6,9,12];
+        else if(val === 'm') portfolio[i].months = [1,2,3,4,5,6,7,8,9,10,11,12];
+        
         renderEditMode();
     }
+
     function addNew() { portfolio.push({ id: Date.now(), name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
     function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
-    function saveData() { localStorage.setItem('etf_full_v2', JSON.stringify(portfolio)); }
-    function loadData() { const d = localStorage.getItem('etf_full_v2'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
+    function saveData() { localStorage.setItem('etf_final_v3', JSON.stringify(portfolio)); }
+    function loadData() { const d = localStorage.getItem('etf_final_v3'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
     function exportImage() { 
         const fab = document.getElementById('fabActions'); fab.style.display='none';
         html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#f0f2f5" }).then(c => {
-            const l = document.createElement('a'); l.download = `存股規劃_${new Date().toISOString().slice(0,10)}.png`; l.href = c.toDataURL(); l.click(); fab.style.display='flex';
+            const l = document.createElement('a'); l.download = `存股報表_${new Date().toISOString().slice(0,10)}.png`; l.href = c.toDataURL(); l.click(); fab.style.display='flex';
         });
     }
 </script>
