@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>存股現金流規劃 (完美版面修復)</title>
+    <title>存股現金流 (代號分離版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -84,26 +84,29 @@
         .bar-val { font-size: 0.7rem; color: #555; font-weight: bold; margin-bottom: 4px; white-space: nowrap; }
         .bar-lbl { font-size: 0.7rem; color: #999; margin-top: 8px; white-space: nowrap; }
 
-        /* --- 優化表格排版 --- */
+        /* --- 優化表格排版 (代號分離) --- */
         .summary-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); table-layout: fixed; }
         
-        /* 調整欄位寬度: 總和 100% */
-        .summary-table th:nth-child(1) { width: 33%; } /* 標的 */
-        .summary-table th:nth-child(2) { width: 32%; } /* 月份 */
-        .summary-table th:nth-child(3) { width: 35%; } /* 金額 - 加大寬度防止切到 */
+        .summary-table th:nth-child(1) { width: 28%; } /* 標的 */
+        .summary-table th:nth-child(2) { width: 37%; } /* 月份 */
+        .summary-table th:nth-child(3) { width: 35%; } /* 金額 */
 
         .summary-table th { background: #f8f9fa; padding: 12px 6px; text-align: left; color: #666; font-size: 0.85rem; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .summary-table td { padding: 12px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .summary-table td { padding: 10px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
         
-        .stock-name { 
-            font-weight: bold; color: var(--primary); font-size: 0.95rem; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* 單行顯示，太長... */
+        /* 檢視模式的代號與名稱樣式 */
+        .view-symbol { 
+            font-weight: 800; color: var(--primary); font-size: 1rem; 
+            line-height: 1.2;
         }
-        .stock-div-info { font-size: 0.75rem; color: #888; margin-top: 4px; }
+        .view-name { 
+            font-size: 0.75rem; color: #888; margin-top: 2px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
         
         .month-grid-view { 
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; 
-            max-width: 160px; /* 限制寬度 */
+            max-width: 160px; 
         }
         .m-dot { 
             width: 16px; height: 16px; border-radius: 50%; 
@@ -116,25 +119,31 @@
         #edit-mode { display: block; }
         .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; margin-bottom: 20px; }
 
-        /* 編輯標題列：允許換行，確保文字不被遮擋 */
+        /* 編輯標題列：雙欄位輸入 */
         .card-header { 
             background-color: #f8f9fa; padding: 12px 15px; border-bottom: 1px solid #eee; 
-            display: flex; align-items: center; gap: 8px; 
-            flex-wrap: wrap; /* 關鍵：允許換行 */
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; 
         }
-        .header-title { 
-            flex-grow: 1; /* 佔滿剩餘空間 */
-            min-width: 200px; /* 至少 200px 寬，不夠就換行 */
+        
+        /* 代號輸入框 */
+        .input-symbol {
+            width: 70px; font-size: 1.1rem; font-weight: 800; color: var(--primary);
+            border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0;
+            text-align: center;
         }
-        .header-title input { 
-            width: 100%; font-size: 1.1rem; font-weight: bold; color: var(--primary); 
-            border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0; 
+        
+        /* 名稱輸入框 (填滿剩餘) */
+        .input-name {
+            flex-grow: 1; font-size: 1rem; color: #555;
+            border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0;
+            min-width: 120px;
         }
+
         .header-info { 
             white-space: nowrap; font-size: 0.85rem; color: #666; background: #fff; 
             padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; 
             display: flex; align-items: center; gap: 5px; 
-            margin-left: auto; /* 靠右對齊 */
+            margin-left: auto; 
         }
         .input-max-div { width: 45px; border: none; border-bottom: 1px solid #ccc; text-align: center; font-weight: bold; }
 
@@ -220,7 +229,7 @@
         <div id="cardList"></div>
         <p style="text-align:center; font-size:0.8rem; color:#999; margin-top:20px;">
             *點擊「設定目標」可編輯藍色區域的目標數值。<br>
-            *「檢視模式」可查看詳細圖表與總表。
+            *名稱與代號現已分開輸入，檢視時會更整齊。
         </p>
     </div>
 
@@ -232,21 +241,22 @@
 </div>
 
 <script>
+    // 資料結構更新：加入 symbol 欄位
     const defaultData = [
         { 
-            id: 1, name: '00919 群益台灣精選高息', maxDiv: 0.72, 
+            id: 1, symbol: '00919', name: '群益台灣精選高息', maxDiv: 0.72, 
             currShares: 10, currPrice: 23.3, currDiv: 0.54,
             targetShares: 50, targetPrice: 23.0, targetDiv: 0.72,
             months: [3, 6, 9, 12], isLocked: true 
         },
         { 
-            id: 2, name: '00878 國泰永續高股息', maxDiv: 0.55, 
+            id: 2, symbol: '00878', name: '國泰永續高股息', maxDiv: 0.55, 
             currShares: 15, currPrice: 22.8, currDiv: 0.42,
             targetShares: 60, targetPrice: 22.5, targetDiv: 0.55,
             months: [2, 5, 8, 11], isLocked: true 
         },
         { 
-            id: 3, name: '0056 元大高股息', maxDiv: 1.07, 
+            id: 3, symbol: '0056', name: '元大高股息', maxDiv: 1.07, 
             currShares: 5, currPrice: 37.5, currDiv: 0.86,
             targetShares: 30, targetPrice: 37.0, targetDiv: 1.0,
             months: [1, 4, 7, 10], isLocked: true 
@@ -314,9 +324,9 @@
 
             div.innerHTML = `
                 <div class="card-header">
-                    <div class="header-title">
-                        <input value="${item.name}" onchange="update(${index}, 'name', this.value)" placeholder="標的名稱">
-                    </div>
+                    <input class="input-symbol" value="${item.symbol || ''}" onchange="update(${index}, 'symbol', this.value)" placeholder="代號">
+                    <input class="input-name" value="${item.name || ''}" onchange="update(${index}, 'name', this.value)" placeholder="標的名稱">
+                    
                     <div class="header-info">
                         <span>🏆 最高:</span>
                         <input type="number" class="input-max-div" value="${item.maxDiv}" step="0.01" 
@@ -405,10 +415,14 @@
             }
             mGrid += '</div>';
             
+            // 顯示名稱 (代號與名稱分離)
+            const displaySymbol = item.symbol ? item.symbol : '';
+            const displayName = item.name ? item.name : '';
+
             tr.innerHTML = `
                 <td>
-                    <div class="stock-name">${item.name}</div>
-                    <div class="stock-div-info">配息: $${item.currDiv}</div>
+                    <div class="view-symbol">${displaySymbol}</div>
+                    <div class="view-name">${displayName}</div>
                 </td>
                 <td>${mGrid}</td>
                 <td style="text-align:right">
@@ -433,7 +447,13 @@
         }
     }
 
-    function update(i, k, v) { if(k==='name') portfolio[i][k]=v; else portfolio[i][k]=parseFloat(v)||0; renderEditMode(); }
+    function update(i, k, v) { 
+        // 修正更新邏輯
+        if (k === 'symbol' || k === 'name') portfolio[i][k] = v;
+        else portfolio[i][k] = parseFloat(v) || 0; 
+        renderEditMode(); 
+    }
+    
     function toggleMonth(i, m) { const idx = portfolio[i].months.indexOf(m); if(idx>-1) portfolio[i].months.splice(idx,1); else portfolio[i].months.push(m); renderEditMode(); }
     function toggleLock(i) { portfolio[i].isLocked = !portfolio[i].isLocked; renderEditMode(); }
     
@@ -445,10 +465,10 @@
         renderEditMode();
     }
 
-    function addNew() { portfolio.push({ id: Date.now(), name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
+    function addNew() { portfolio.push({ id: Date.now(), symbol: '', name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
     function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
-    function saveData() { localStorage.setItem('etf_final_v6', JSON.stringify(portfolio)); }
-    function loadData() { const d = localStorage.getItem('etf_final_v6'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
+    function saveData() { localStorage.setItem('etf_split_v1', JSON.stringify(portfolio)); }
+    function loadData() { const d = localStorage.getItem('etf_split_v1'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
     function exportImage() { 
         const fab = document.getElementById('fabActions'); fab.style.display='none';
         html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#f0f2f5" }).then(c => {
