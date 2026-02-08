@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>存股現金流</title>
+    <title>存股現金流 (預設暗色/檢視版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
+            /* 亮色變數 */
             --primary: #2c3e50;
             --accent: #3498db;
             --bg: #f0f2f5;
@@ -25,6 +26,7 @@
             --shadow: rgba(0,0,0,0.05);
         }
 
+        /* 暗色變數 (預設生效，透過 JS 控制 class) */
         body.dark-theme {
             --primary: #a6c8ff;
             --accent: #64b5f6;
@@ -81,7 +83,7 @@
         .dash-sub { color: #f1c40f; font-size: 0.9rem; }
 
         /* --- View Mode --- */
-        #view-mode { display: none; }
+        #view-mode { display: block; } /* 預設顯示 */
         .chart-section { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px var(--shadow); border: 1px solid var(--border); }
         .chart-header { font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
         
@@ -108,7 +110,7 @@
         .m-dot.active { background: var(--accent); color: white; font-weight: bold; }
 
         /* --- Edit Mode --- */
-        #edit-mode { display: block; }
+        #edit-mode { display: none; } /* 預設隱藏 */
         .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px var(--shadow); overflow: hidden; border: 1px solid var(--border); margin-bottom: 20px; transition: background 0.3s; }
         .card-header { background-color: var(--header-bg); padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         
@@ -134,7 +136,7 @@
         .section-target .section-title { color: var(--target-text); margin-bottom: 0; }
         
         .btn-toggle-target { background: var(--card-bg); border: 1px solid var(--accent); color: var(--target-text); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .btn-toggle-target.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .btn-toggle-target.active { background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; }
 
         .data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
         .data-group { display: flex; flex-direction: column; gap: 4px; }
@@ -152,34 +154,24 @@
         .fab-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 900; }
         .btn-main { border: none; padding: 10px 24px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 5px; }
 
-        /* --- 報表專用樣式 (隱藏產生) --- */
-        #report-container {
-            position: absolute; top: -9999px; left: -9999px;
-            width: 800px; /* A4 width approx */
-            background: white; padding: 40px;
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            color: #333;
-        }
+        /* --- Report Styles (Hidden) --- */
+        #report-container { position: absolute; top: -9999px; left: -9999px; width: 800px; background: white; padding: 40px; font-family: "Helvetica Neue", Arial, sans-serif; color: #333; }
         .rpt-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2c3e50; padding-bottom: 20px; }
         .rpt-title { font-size: 28px; font-weight: 800; color: #2c3e50; margin: 0; }
         .rpt-date { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
-        
         .rpt-summary { display: flex; justify-content: space-between; margin-bottom: 30px; gap: 20px; }
         .rpt-card { flex: 1; background: #f8f9fa; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #eee; }
         .rpt-card-label { font-size: 14px; color: #7f8c8d; display: block; margin-bottom: 5px; }
         .rpt-card-val { font-size: 24px; font-weight: bold; color: #2c3e50; }
         .rpt-card-sub { font-size: 12px; color: #27ae60; margin-top: 5px; }
-        
         .rpt-progress-section { margin-bottom: 30px; }
         .rpt-progress-bg { height: 16px; background: #eee; border-radius: 8px; overflow: hidden; margin-top: 5px; }
         .rpt-progress-bar { height: 100%; background: #3498db; }
-        
         .rpt-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .rpt-table th { background: #2c3e50; color: white; padding: 12px; font-size: 14px; text-align: left; }
         .rpt-table td { border-bottom: 1px solid #eee; padding: 12px; font-size: 14px; color: #333; }
         .rpt-row-sub { font-size: 12px; color: #7f8c8d; }
         .rpt-tag { display: inline-block; padding: 2px 6px; background: #e3f2fd; color: #1565c0; border-radius: 4px; font-size: 12px; margin-right: 2px; }
-        .rpt-tax-warn { color: #c0392b; font-weight: bold; }
 
         @media (max-width: 600px) {
             .data-grid { grid-template-columns: 1fr 1fr; }
@@ -195,9 +187,9 @@
 <div class="top-bar">
     <div style="width:40px;"></div> 
     <div class="mode-switch" onclick="toggleMode()">
-        <div class="mode-indicator" id="modeIndicator" style="left: 4px;"></div>
-        <button class="mode-btn active" id="btnEdit">✏️ 編輯</button>
-        <button class="mode-btn" id="btnView">👁️ 檢視</button>
+        <div class="mode-indicator" id="modeIndicator" style="left: 50%;"></div>
+        <button class="mode-btn" id="btnEdit">✏️ 編輯</button>
+        <button class="mode-btn active" id="btnView">👁️ 檢視</button>
     </div>
     <button class="theme-btn" onclick="toggleTheme()" title="切換暗色模式">🌙</button>
 </div>
@@ -234,19 +226,19 @@
         <div id="cardList"></div>
         <p style="text-align:center; font-size:0.8rem; color:var(--sub-text); margin-top:20px;">
             *月份可水平滑動選取。<br>
-            *點擊「設定目標」可編輯目標數值。
+            *點擊「設定目標」可編輯藍色區域的目標數值。
         </p>
     </div>
 
 </div>
 
-<div class="fab-container" id="fabActions">
+<div class="fab-container" id="fabActions" style="display:none;">
     <button class="btn-main" onclick="addNew()">➕ 新增標的</button>
     <button class="btn-main" style="background:var(--success)" onclick="exportReport()">📷 輸出報表</button>
 </div>
 
 <script>
-    // 預設資料：順序調整為 0056 -> 00878 -> 00919
+    // 預設資料
     const defaultData = [
         { 
             id: 1, symbol: '0056', name: '元大高股息', maxDiv: 1.07, 
@@ -269,18 +261,29 @@
     ];
 
     let portfolio = [];
-    let isEditMode = true;
-    let isDarkMode = false;
+    let isEditMode = false; // 預設檢視模式
+    let isDarkMode = true;  // 預設暗色模式
 
     window.onload = function() {
         loadData();
         loadTheme(); 
+        applyInitialMode(); // 確保 UI 與變數同步
         renderEditMode();
         renderViewMode(); 
     };
 
     function toggleTheme() { isDarkMode = !isDarkMode; applyTheme(); localStorage.setItem('etf_theme_dark', isDarkMode); }
-    function loadTheme() { const saved = localStorage.getItem('etf_theme_dark'); if (saved !== null) isDarkMode = (saved === 'true'); applyTheme(); }
+    
+    function loadTheme() { 
+        const saved = localStorage.getItem('etf_theme_dark'); 
+        if (saved !== null) {
+            isDarkMode = (saved === 'true');
+        } else {
+            isDarkMode = true; // 預設暗色
+        }
+        applyTheme(); 
+    }
+    
     function applyTheme() {
         const btn = document.querySelector('.theme-btn');
         if (isDarkMode) { document.body.classList.add('dark-theme'); btn.innerText = '☀️'; } 
@@ -289,6 +292,10 @@
 
     function toggleMode() {
         isEditMode = !isEditMode;
+        applyInitialMode();
+    }
+
+    function applyInitialMode() {
         const ind = document.getElementById('modeIndicator');
         const vDiv = document.getElementById('view-mode');
         const eDiv = document.getElementById('edit-mode');
@@ -297,12 +304,14 @@
         const bV = document.getElementById('btnView');
 
         if (isEditMode) {
+            // 進入編輯模式
             ind.style.left = '4px'; bE.classList.add('active'); bV.classList.remove('active');
             vDiv.style.display = 'none'; eDiv.style.display = 'block'; fab.style.display = 'flex';
         } else {
+            // 進入檢視模式
             ind.style.left = '50%'; bE.classList.remove('active'); bV.classList.add('active');
             vDiv.style.display = 'block'; eDiv.style.display = 'none'; fab.style.display = 'none';
-            renderViewMode();
+            renderViewMode(); // 確保檢視模式數據最新
         }
     }
 
@@ -482,37 +491,36 @@
     function addNew() { portfolio.push({ id: Date.now(), symbol: '', name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
     function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
     
-    function saveData() { localStorage.setItem('etf_final_rpt', JSON.stringify(portfolio)); }
-    function loadData() { const d = localStorage.getItem('etf_final_rpt'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
+    function saveData() { localStorage.setItem('etf_default_v9', JSON.stringify(portfolio)); }
+    function loadData() { 
+        const d = localStorage.getItem('etf_default_v9'); 
+        if(d) {
+            portfolio = JSON.parse(d); 
+        } else {
+            portfolio = JSON.parse(JSON.stringify(defaultData)); 
+        }
+    }
     
-    // --- 產生高質感報表 ---
+    // 輸出報表邏輯
     function exportReport() {
         const fab = document.getElementById('fabActions');
         fab.style.display = 'none';
 
-        // 1. 計算總數據
-        let totalCurrent = 0;
-        let totalTarget = 0;
-        portfolio.forEach(p => {
-            const cNet = (p.currShares * 1000 * p.currDiv) - (p.currShares * 1000 * p.currDiv > 20000 ? Math.floor(p.currShares * 1000 * p.currDiv * 0.0211) : 0);
-            const tNet = (p.targetShares * 1000 * p.targetDiv) - (p.targetShares * 1000 * p.targetDiv > 20000 ? Math.floor(p.targetShares * 1000 * p.targetDiv * 0.0211) : 0);
-            totalCurrent += cNet * p.months.length;
-            totalTarget += tNet * p.months.length;
-        });
-        const progress = totalTarget > 0 ? (totalCurrent / totalTarget) * 100 : 0;
-
-        // 2. 建立報表 DOM
+        // 建立報表容器
         const reportDiv = document.createElement('div');
         reportDiv.id = 'report-container';
         
+        let totalCurrent = 0; let totalTarget = 0;
         let tableRows = '';
+
         portfolio.forEach(p => {
             const cNet = (p.currShares * 1000 * p.currDiv) - (p.currShares * 1000 * p.currDiv > 20000 ? Math.floor(p.currShares * 1000 * p.currDiv * 0.0211) : 0);
-            const annual = cNet * p.months.length;
-            
-            // 目標差異
             const tNet = (p.targetShares * 1000 * p.targetDiv) - (p.targetShares * 1000 * p.targetDiv > 20000 ? Math.floor(p.targetShares * 1000 * p.targetDiv * 0.0211) : 0);
+            const annual = cNet * p.months.length;
             const tAnnual = tNet * p.months.length;
+            
+            totalCurrent += annual;
+            totalTarget += tAnnual;
             const diff = tAnnual - annual;
             
             let monthsHtml = p.months.sort((a,b)=>a-b).map(m => `<span class="rpt-tag">${m}月</span>`).join('');
@@ -532,6 +540,8 @@
                 </tr>
             `;
         });
+        
+        const progress = totalTarget > 0 ? (totalCurrent / totalTarget) * 100 : 0;
 
         reportDiv.innerHTML = `
             <div class="rpt-header">
@@ -583,14 +593,13 @@
 
         document.body.appendChild(reportDiv);
 
-        // 3. 截圖
-        html2canvas(reportDiv, { scale: 2 }).then(canvas => {
+        // 強制使用白底輸出報表
+        html2canvas(reportDiv, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
             const link = document.createElement('a');
             link.download = `存股規劃報告_${new Date().toISOString().slice(0,10)}.png`;
             link.href = canvas.toDataURL();
             link.click();
             
-            // 清理
             document.body.removeChild(reportDiv);
             fab.style.display = 'flex';
         });
