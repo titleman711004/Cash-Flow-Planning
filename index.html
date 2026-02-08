@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>存股現金流規劃 (進度空白版)</title>
+    <title>存股現金流規劃 (完美修復版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -17,184 +17,175 @@
             --warning: #f1c40f;
             --danger: #c0392b;
             --text: #333;
+            --sub-text: #666;
+            --header-bg: #f8f9fa;
+            --border: #e0e0e0;
+            --input-bg: #ffffff;
             --header-height: 60px;
+            --shadow: rgba(0,0,0,0.05);
+        }
+
+        body.dark-theme {
+            --primary: #a6c8ff;
+            --accent: #64b5f6;
+            --bg: #121212;
+            --card-bg: #1e1e1e;
+            --header-bg: #2c2c2c;
+            --border: #444;
+            --input-bg: #2c2c2c;
+            --text: #e0e0e0;
+            --sub-text: #aaa;
+            --target-bg: #1a2733;
+            --target-text: #90caf9;
+            --success: #66bb6a;
+            --warning: #fdd835;
+            --danger: #ef5350;
+            --shadow: rgba(0,0,0,0.5);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 15px;
-            color: var(--text);
             padding-bottom: 100px;
             padding-top: 80px;
+            transition: background 0.3s, color 0.3s;
         }
 
         .container { max-width: 1000px; margin: 0 auto; }
 
-        /* --- 置頂切換列 --- */
+        /* --- Top Bar --- */
         .top-bar {
-            position: fixed; top: 0; left: 0; right: 0;
-            height: var(--header-height);
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #ddd;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            padding: 0 20px;
+            position: fixed; top: 0; left: 0; right: 0; height: var(--header-height);
+            background: var(--card-bg); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; box-shadow: 0 2px 10px var(--shadow); padding: 0 15px;
         }
-        
-        .mode-switch {
-            background: #e0e0e0; border-radius: 30px; padding: 4px;
-            display: flex; position: relative; cursor: pointer;
-        }
-        .mode-btn {
-            padding: 8px 20px; border-radius: 25px; font-size: 0.95rem; font-weight: bold;
-            color: #666; z-index: 2; transition: color 0.3s; border: none; background: transparent;
-        }
-        .mode-btn.active { color: white; }
-        .mode-indicator {
-            position: absolute; top: 4px; bottom: 4px; width: 50%; border-radius: 25px;
-            background: var(--accent); transition: left 0.3s ease; z-index: 1;
-        }
+        .mode-switch { background: var(--border); border-radius: 30px; padding: 4px; display: flex; position: relative; cursor: pointer; margin: 0 auto; }
+        .mode-btn { padding: 6px 16px; border-radius: 25px; font-size: 0.9rem; font-weight: bold; color: var(--sub-text); z-index: 2; transition: color 0.3s; border: none; background: transparent; }
+        .mode-btn.active { color: var(--card-bg); }
+        .mode-indicator { position: absolute; top: 4px; bottom: 4px; width: 50%; border-radius: 25px; background: var(--text); transition: left 0.3s ease; z-index: 1; }
+        .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
 
-        /* --- 儀表板 --- */
+        /* --- Dashboard --- */
         .dashboard {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white; border-radius: 12px; padding: 20px;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-            margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #2c3e50, #34495e); color: white;
+            border-radius: 12px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .dash-item { text-align: center; }
         .dash-label { font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; }
         .dash-value { font-size: 1.5rem; font-weight: bold; }
         .dash-sub { color: #f1c40f; font-size: 0.9rem; }
 
-        /* --- 檢視模式 --- */
+        /* --- View Mode --- */
         #view-mode { display: none; }
-        .chart-section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .chart-header { font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .chart-section { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px var(--shadow); border: 1px solid var(--border); }
+        .chart-header { font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px solid var(--border); padding-bottom: 10px; }
         
+        /* 修復長條圖左右間距 */
         .bar-chart { 
             display: flex; justify-content: space-between; align-items: flex-end; 
-            height: 180px; padding: 0 5px 5px 5px; gap: 4px; 
+            height: 180px; padding: 0 10px 5px 10px; gap: 4px; 
         }
         .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
         .bar { width: 80%; max-width: 25px; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 4px; opacity: 0.8; transition: height 0.3s ease; }
-        .bar-val { font-size: 0.7rem; color: #555; font-weight: bold; margin-bottom: 4px; white-space: nowrap; }
-        .bar-lbl { font-size: 0.7rem; color: #999; margin-top: 8px; white-space: nowrap; }
+        .bar-val { font-size: 0.7rem; color: var(--sub-text); font-weight: bold; margin-bottom: 4px; white-space: nowrap; }
+        .bar-lbl { font-size: 0.7rem; color: var(--sub-text); margin-top: 8px; white-space: nowrap; }
 
-        /* --- 優化表格排版 (代號分離) --- */
-        .summary-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); table-layout: fixed; }
-        
-        .summary-table th:nth-child(1) { width: 28%; } /* 標的 */
-        .summary-table th:nth-child(2) { width: 37%; } /* 月份 */
-        .summary-table th:nth-child(3) { width: 35%; } /* 金額 */
+        .summary-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px var(--shadow); table-layout: fixed; border: 1px solid var(--border); }
+        .summary-table th:nth-child(1) { width: 30%; }
+        .summary-table th:nth-child(2) { width: 35%; }
+        .summary-table th:nth-child(3) { width: 35%; } /* 加大金額欄寬度 */
 
-        .summary-table th { background: #f8f9fa; padding: 12px 6px; text-align: left; color: #666; font-size: 0.85rem; border-bottom: 1px solid #eee; white-space: nowrap; }
-        .summary-table td { padding: 10px 6px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .summary-table th { background: var(--header-bg); padding: 12px 6px; text-align: left; color: var(--sub-text); font-size: 0.8rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .summary-table td { padding: 12px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+        .stock-name { font-weight: bold; color: var(--primary); font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* 檢視模式的代號與名稱樣式 */
-        .view-symbol { 
-            font-weight: 800; color: var(--primary); font-size: 1rem; 
-            line-height: 1.2;
-        }
-        .view-name { 
-            font-size: 0.75rem; color: #888; margin-top: 2px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-        }
-        
-        .month-grid-view { 
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; 
-            max-width: 160px; 
-        }
-        .m-dot { 
-            width: 16px; height: 16px; border-radius: 50%; 
-            background: #f0f0f0; color: #ccc; 
-            font-size: 0.6rem; display: flex; justify-content: center; align-items: center;
-        }
+        .month-grid-view { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; max-width: 160px; }
+        .m-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--border); color: var(--bg); font-size: 0.6rem; display: flex; justify-content: center; align-items: center; }
         .m-dot.active { background: var(--accent); color: white; font-weight: bold; }
 
-        /* --- 編輯模式 --- */
+        /* --- Edit Mode --- */
         #edit-mode { display: block; }
-        .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; margin-bottom: 20px; }
-
-        /* 編輯標題列：雙欄位輸入 */
-        .card-header { 
-            background-color: #f8f9fa; padding: 12px 15px; border-bottom: 1px solid #eee; 
-            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; 
-        }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px var(--shadow); overflow: hidden; border: 1px solid var(--border); margin-bottom: 20px; transition: background 0.3s; }
+        .card-header { background-color: var(--header-bg); padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         
-        /* 代號輸入框 */
-        .input-symbol {
-            width: 70px; font-size: 1.1rem; font-weight: 800; color: var(--primary);
-            border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0;
-            text-align: center;
-        }
+        input { background: var(--input-bg); color: var(--text); border: none; border-bottom: 1px dashed var(--border); padding: 2px 0; }
+        .input-symbol { width: 70px; font-size: 1.1rem; font-weight: 800; color: var(--primary); text-align: center; }
+        .input-name { flex-grow: 1; font-size: 1rem; min-width: 120px; }
+        .header-info { white-space: nowrap; font-size: 0.85rem; color: var(--sub-text); background: var(--input-bg); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); display: flex; align-items: center; gap: 5px; margin-left: auto; }
+        .input-max-div { width: 45px; text-align: center; font-weight: bold; }
+
+        /* 月份選擇器改為水平滑動 */
+        .month-selector { padding: 12px 15px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: block; }
         
-        /* 名稱輸入框 (填滿剩餘) */
-        .input-name {
-            flex-grow: 1; font-size: 1rem; color: #555;
-            border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0;
-            min-width: 120px;
-        }
+        /* 上排：標籤 + 快速選單 */
+        .ms-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .ms-label { font-size: 0.85rem; color: var(--sub-text); font-weight: bold; }
+        .quick-select { padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.8rem; color: var(--text); background: var(--input-bg); cursor: pointer; }
 
-        .header-info { 
-            white-space: nowrap; font-size: 0.85rem; color: #666; background: #fff; 
-            padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; 
-            display: flex; align-items: center; gap: 5px; 
-            margin-left: auto; 
+        /* 下排：月份按鈕 (可滑動) */
+        .ms-scroll-container { 
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;
+            /* 隱藏捲軸但保留功能 */
+            scrollbar-width: none; -ms-overflow-style: none;
         }
-        .input-max-div { width: 45px; border: none; border-bottom: 1px solid #ccc; text-align: center; font-weight: bold; }
-
-        .month-selector { padding: 10px 15px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .ms-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #ddd; color: #aaa; font-size: 0.7rem; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .ms-scroll-container::-webkit-scrollbar { display: none; }
+        
+        .ms-btn { 
+            flex: 0 0 32px; height: 32px; /* 固定寬高 */
+            border-radius: 50%; border: 1px solid var(--border); color: var(--sub-text); 
+            font-size: 0.8rem; display: flex; justify-content: center; align-items: center; cursor: pointer; 
+        }
         .ms-btn.active { background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; }
-        
-        .quick-select { margin-left: auto; padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.8rem; color: #555; background: #f9f9f9; cursor: pointer; }
 
         .section-current { padding: 15px; }
-        .section-target { background-color: var(--target-bg); padding: 15px; border-top: 1px solid #bbdefb; }
-        
+        .section-target { background-color: var(--target-bg); padding: 15px; border-top: 1px solid var(--border); }
         .target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .section-title { font-size: 0.9rem; color: #999; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .section-title { font-size: 0.9rem; color: var(--sub-text); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
         .section-target .section-title { color: var(--target-text); margin-bottom: 0; }
         
-        .btn-toggle-target { background: white; border: 1px solid #90caf9; color: var(--target-text); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .btn-toggle-target.active { background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; }
+        .btn-toggle-target { background: var(--card-bg); border: 1px solid var(--accent); color: var(--target-text); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-toggle-target.active { background: var(--accent); color: white; border-color: var(--accent); }
 
         .data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
         .data-group { display: flex; flex-direction: column; gap: 4px; }
-        .data-group label { font-size: 0.75rem; color: #666; }
-        .input-val { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold; font-size: 1rem; box-sizing: border-box; background: #fff; }
+        .data-group label { font-size: 0.75rem; color: var(--sub-text); }
+        .input-val { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: bold; font-size: 1rem; box-sizing: border-box; background: var(--input-bg); color: var(--text); border-bottom: 1px solid var(--border); }
         .input-val.locked { border: none; background: transparent; color: var(--target-text); pointer-events: none; }
 
-        .result-box { grid-column: span 4; display: flex; justify-content: space-between; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 8px; margin-top: 5px; border: 1px solid rgba(0,0,0,0.05); }
+        .result-box { grid-column: span 4; display: flex; justify-content: space-between; background: rgba(128,128,128,0.1); padding: 10px; border-radius: 8px; margin-top: 5px; border: 1px solid var(--border); }
         .res-item { text-align: center; flex: 1; }
-        .res-val { font-weight: bold; font-size: 1.05rem; display: block; }
+        .res-val { font-weight: bold; font-size: 1.05rem; display: block; color: var(--text); }
         .tax-warn { color: var(--danger); }
         .tax-safe { color: var(--success); }
 
-        .btn-del { border: none; background: transparent; color: #aaa; font-size: 1.5rem; cursor: pointer; padding: 0 5px; line-height: 1; }
+        .btn-del { border: none; background: transparent; color: var(--sub-text); font-size: 1.5rem; cursor: pointer; padding: 0 5px; line-height: 1; }
         .fab-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 900; }
-        .btn-main { border: none; padding: 10px 24px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-main { border: none; padding: 10px 24px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 5px; }
 
         @media (max-width: 600px) {
             .data-grid { grid-template-columns: 1fr 1fr; }
             .result-box { flex-direction: column; gap: 10px; text-align: left; }
-            .res-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+            .res-item { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
             .res-item:last-child { border-bottom: none; }
+            .top-bar { padding: 0 10px; }
         }
     </style>
 </head>
 <body>
 
 <div class="top-bar">
+    <div style="width:40px;"></div> 
     <div class="mode-switch" onclick="toggleMode()">
         <div class="mode-indicator" id="modeIndicator" style="left: 4px;"></div>
-        <button class="mode-btn active" id="btnEdit">✏️ 編輯模式</button>
-        <button class="mode-btn" id="btnView">👁️ 檢視模式</button>
+        <button class="mode-btn active" id="btnEdit">✏️ 編輯</button>
+        <button class="mode-btn" id="btnView">👁️ 檢視</button>
     </div>
+    <button class="theme-btn" onclick="toggleTheme()" title="切換暗色模式">🌙</button>
 </div>
 
 <div class="container" id="capture-area">
@@ -216,7 +207,7 @@
             <div class="chart-header">📊 預估每月領息金額</div>
             <div class="bar-chart" id="barChart"></div>
         </div>
-        <div style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+        <div style="background:var(--card-bg); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px var(--shadow); border:1px solid var(--border);">
             <div class="chart-header" style="padding-top:15px; border:none;">📋 配息總表</div>
             <table class="summary-table">
                 <thead><tr><th>標的</th><th>配息月份</th><th style="text-align:right;">年領 (現/目)</th></tr></thead>
@@ -227,8 +218,8 @@
 
     <div id="edit-mode">
         <div id="cardList"></div>
-        <p style="text-align:center; font-size:0.8rem; color:#999; margin-top:20px;">
-            *點擊「設定目標」可編輯藍色區域的目標數值。<br>
+        <p style="text-align:center; font-size:0.8rem; color:var(--sub-text); margin-top:20px;">
+            *月份可水平滑動選取，不會再掉到第二行。<br>
             *名稱與代號現已分開輸入，檢視時會更整齊。
         </p>
     </div>
@@ -237,17 +228,16 @@
 
 <div class="fab-container" id="fabActions">
     <button class="btn-main" onclick="addNew()">➕ 新增標的</button>
-    <button class="btn-main" style="background:#27ae60" onclick="exportImage()">📷 輸出報表</button>
+    <button class="btn-main" style="background:var(--success)" onclick="exportImage()">📷 輸出報表</button>
 </div>
 
 <script>
-    // 預設資料：目前進度已清空 (設為0)，目標保留
     const defaultData = [
         { 
-            id: 1, symbol: '00919', name: '群益台灣精選高息', maxDiv: 0.72, 
+            id: 1, symbol: '0056', name: '元大高股息', maxDiv: 1.07, 
             currShares: 0, currPrice: 0, currDiv: 0,
-            targetShares: 27, targetPrice: 23.0, targetDiv: 0.72,
-            months: [3, 6, 9, 12], isLocked: true 
+            targetShares: 18, targetPrice: 35.0, targetDiv: 1.07,
+            months: [1, 4, 7, 10], isLocked: true 
         },
         { 
             id: 2, symbol: '00878', name: '國泰永續高股息', maxDiv: 0.55, 
@@ -256,21 +246,46 @@
             months: [2, 5, 8, 11], isLocked: true 
         },
         { 
-            id: 3, symbol: '0056', name: '元大高股息', maxDiv: 1.07, 
+            id: 3, symbol: '00919', name: '群益台灣精選高息', maxDiv: 0.72, 
             currShares: 0, currPrice: 0, currDiv: 0,
-            targetShares: 18, targetPrice: 35.0, targetDiv: 1.07,
-            months: [1, 4, 7, 10], isLocked: true 
+            targetShares: 27, targetPrice: 23.0, targetDiv: 0.72,
+            months: [3, 6, 9, 12], isLocked: true 
         }
     ];
 
     let portfolio = [];
     let isEditMode = true;
+    let isDarkMode = false;
 
     window.onload = function() {
         loadData();
+        loadTheme(); 
         renderEditMode();
         renderViewMode(); 
     };
+
+    function toggleTheme() {
+        isDarkMode = !isDarkMode;
+        applyTheme();
+        localStorage.setItem('etf_theme_dark', isDarkMode);
+    }
+
+    function loadTheme() {
+        const saved = localStorage.getItem('etf_theme_dark');
+        if (saved !== null) isDarkMode = (saved === 'true');
+        applyTheme();
+    }
+
+    function applyTheme() {
+        const btn = document.querySelector('.theme-btn');
+        if (isDarkMode) {
+            document.body.classList.add('dark-theme');
+            btn.innerText = '☀️';
+        } else {
+            document.body.classList.remove('dark-theme');
+            btn.innerText = '🌙';
+        }
+    }
 
     function toggleMode() {
         isEditMode = !isEditMode;
@@ -297,7 +312,6 @@
         let totalCurrent = 0; let totalTarget = 0;
 
         portfolio.forEach((item, index) => {
-            // 計算
             const cG = Math.round(item.currShares * 1000 * item.currDiv);
             let cTax = 0; if (cG > 20000) cTax = Math.floor(cG * 0.0211);
             const cNet = cG - cTax;
@@ -336,16 +350,19 @@
                 </div>
                 
                 <div class="month-selector">
-                    <span style="font-size:0.8rem; color:#666;">配息月:</span>
-                    <div style="display:flex; gap:4px; flex-wrap:wrap;">${monthBtns}</div>
-                    
-                    <select class="quick-select" onchange="quickSetMonths(${index}, this.value)">
-                        <option value="" disabled selected>快速設定</option>
-                        <option value="s1">1, 4, 7, 10</option>
-                        <option value="s2">2, 5, 8, 11</option>
-                        <option value="s3">3, 6, 9, 12</option>
-                        <option value="m">月月配 (1-12)</option>
-                    </select>
+                    <div class="ms-top-row">
+                        <span class="ms-label">配息月 (可滑動):</span>
+                        <select class="quick-select" onchange="quickSetMonths(${index}, this.value)">
+                            <option value="" disabled selected>快速設定</option>
+                            <option value="s1">1, 4, 7, 10</option>
+                            <option value="s2">2, 5, 8, 11</option>
+                            <option value="s3">3, 6, 9, 12</option>
+                            <option value="m">月月配 (1-12)</option>
+                        </select>
+                    </div>
+                    <div class="ms-scroll-container">
+                        ${monthBtns}
+                    </div>
                 </div>
 
                 <div class="section-current">
@@ -354,10 +371,10 @@
                         <div class="data-group"><label>張數</label><input class="input-val" type="number" value="${item.currShares||''}" placeholder="0" onchange="update(${index}, 'currShares', this.value)"></div>
                         <div class="data-group"><label>均價</label><input class="input-val" type="number" value="${item.currPrice||''}" placeholder="0" step="0.1" onchange="update(${index}, 'currPrice', this.value)"></div>
                         <div class="data-group"><label>配息</label><input class="input-val" type="number" value="${item.currDiv||''}" placeholder="0" step="0.01" onchange="update(${index}, 'currDiv', this.value)"></div>
-                        <div class="data-group"><label>實領</label><input class="input-val" style="border:none; color:${cTax>0?'#c0392b':'#27ae60'}" value="$${cNet}" disabled></div>
+                        <div class="data-group"><label>實領</label><input class="input-val" style="border:none; color:${cTax>0?'var(--danger)':'var(--success)'}" value="$${cNet}" disabled></div>
                     </div>
                     <div class="result-box">
-                        <div class="res-item"><label style="font-size:0.75rem; color:#666;">二代健保</label><span class="res-val ${cTax>0?'tax-warn':'tax-safe'}">${cTax>0?'-$'+cTax:'免稅'}</span></div>
+                        <div class="res-item"><label style="font-size:0.75rem; color:var(--sub-text);">二代健保</label><span class="res-val ${cTax>0?'tax-warn':'tax-safe'}">${cTax>0?'-$'+cTax:'免稅'}</span></div>
                     </div>
                 </div>
 
@@ -372,9 +389,9 @@
                         <div class="data-group"><label>預估配息</label><input class="input-val ${lockClass}" type="number" value="${item.targetDiv}" step="0.01" onchange="update(${index}, 'targetDiv', this.value)"></div>
                         <div class="data-group"><label>目標成本</label><input class="input-val locked" value="${(tCost/10000).toFixed(1)}萬" disabled></div>
                     </div>
-                    <div class="result-box" style="background:rgba(255,255,255,0.8); border-color:#aecbeb;">
-                        <div class="res-item"><label style="font-size:0.75rem; color:#1565c0;">目標實領</label><span class="res-val" style="color:#1565c0;">$${tNet.toLocaleString()}</span></div>
-                        <div class="res-item"><label style="font-size:0.75rem; color:#1565c0;">目標健保</label><span class="res-val ${tTax>0?'tax-warn':'tax-safe'}">${tTax>0?'-$'+tTax:'免稅'}</span></div>
+                    <div class="result-box" style="background:rgba(255,255,255,0.1); border-color:var(--border);">
+                        <div class="res-item"><label style="font-size:0.75rem; color:var(--target-text);">目標實領</label><span class="res-val" style="color:var(--target-text);">$${tNet.toLocaleString()}</span></div>
+                        <div class="res-item"><label style="font-size:0.75rem; color:var(--target-text);">目標健保</label><span class="res-val ${tTax>0?'tax-warn':'tax-safe'}">${tTax>0?'-$'+tTax:'免稅'}</span></div>
                     </div>
                 </div>
             `;
@@ -437,7 +454,7 @@
             const val = monthlySum[i];
             const h = maxVal > 0 ? (val / maxVal) * 80 + 10 : 5;
             const dVal = val > 0 ? (val/1000).toFixed(0)+'k' : '';
-            const bg = val > 0 ? 'var(--accent)' : '#eee';
+            const bg = val > 0 ? 'var(--accent)' : 'var(--border)';
             
             const col = document.createElement('div');
             col.className = 'bar-col';
@@ -465,11 +482,21 @@
 
     function addNew() { portfolio.push({ id: Date.now(), symbol: '', name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
     function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
-    function saveData() { localStorage.setItem('etf_split_v2', JSON.stringify(portfolio)); }
-    function loadData() { const d = localStorage.getItem('etf_split_v2'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
+    
+    function saveData() { localStorage.setItem('etf_dark_v8', JSON.stringify(portfolio)); }
+    function loadData() { 
+        const d = localStorage.getItem('etf_dark_v8'); 
+        if(d) {
+            portfolio = JSON.parse(d); 
+        } else {
+            portfolio = JSON.parse(JSON.stringify(defaultData)); 
+        }
+    }
+    
     function exportImage() { 
         const fab = document.getElementById('fabActions'); fab.style.display='none';
-        html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#f0f2f5" }).then(c => {
+        const bg = isDarkMode ? "#121212" : "#f0f2f5";
+        html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: bg }).then(c => {
             const l = document.createElement('a'); l.download = `存股報表_${new Date().toISOString().slice(0,10)}.png`; l.href = c.toDataURL(); l.click(); fab.style.display='flex';
         });
     }
