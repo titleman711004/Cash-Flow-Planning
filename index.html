@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>存股現金流規劃</title>
+    <title>存股現金流</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -60,12 +60,8 @@
 
         /* --- Footer --- */
         .footer {
-            text-align: center;
-            padding: 20px 0;
-            margin-top: 30px;
-            color: var(--sub-text);
-            font-size: 0.85rem;
-            border-top: 1px solid transparent; 
+            text-align: center; padding: 20px 0; margin-top: 30px;
+            color: var(--sub-text); font-size: 0.85rem;
         }
 
         /* --- Top Bar --- */
@@ -81,7 +77,7 @@
         .mode-indicator { position: absolute; top: 4px; bottom: 4px; width: 50%; border-radius: 25px; background: var(--text); transition: left 0.3s ease; z-index: 1; }
         .theme-btn { background: transparent; border: 1px solid var(--border); color: var(--text); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
 
-        /* --- Dashboard --- */
+        /* --- Dashboard (含進度條) --- */
         .dashboard {
             background: linear-gradient(135deg, #2c3e50, #34495e); color: white;
             border-radius: 12px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
@@ -91,6 +87,12 @@
         .dash-label { font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; }
         .dash-value { font-size: 1.5rem; font-weight: bold; }
         .dash-sub { color: #f1c40f; font-size: 0.9rem; }
+
+        /* 進度條樣式 */
+        .dash-progress-box { grid-column: span 2; margin-top: 5px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .dash-p-info { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; opacity: 0.9; }
+        .progress-track { background: rgba(0,0,0,0.3); height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .progress-fill { background: var(--success); height: 100%; width: 0%; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(46, 204, 113, 0.5); }
 
         /* --- View Mode --- */
         #view-mode { display: block; }
@@ -216,6 +218,15 @@
         <div class="dash-item">
             <span class="dash-label">目標年領股利 (稅後)</span>
             <span class="dash-value" id="dashTarget" style="color:#f1c40f">$0</span>
+        </div>
+        <div class="dash-progress-box">
+            <div class="dash-p-info">
+                <span>達成目標進度</span>
+                <span id="dashPercent" style="font-weight:bold; color:var(--success)">0%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="dashProgressBar" style="width: 0%"></div>
+            </div>
         </div>
     </div>
 
@@ -414,9 +425,16 @@
             container.appendChild(div);
         });
 
+        // 更新儀表板數值
         document.getElementById('dashCurrent').innerText = "$" + totalCurrent.toLocaleString();
         document.getElementById('dashMonthly').innerText = "$" + Math.round(totalCurrent/12).toLocaleString();
         document.getElementById('dashTarget').innerText = "$" + totalTarget.toLocaleString();
+        
+        // 更新儀表板進度條
+        const progress = totalTarget > 0 ? (totalCurrent / totalTarget) * 100 : 0;
+        document.getElementById('dashProgressBar').style.width = Math.min(progress, 100) + '%';
+        document.getElementById('dashPercent').innerText = progress.toFixed(1) + '%';
+
         saveData();
     }
 
@@ -499,9 +517,9 @@
     function addNew() { portfolio.push({ id: Date.now(), symbol: '', name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
     function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
     
-    function saveData() { localStorage.setItem('etf_default_v9', JSON.stringify(portfolio)); }
+    function saveData() { localStorage.setItem('etf_default_v10', JSON.stringify(portfolio)); }
     function loadData() { 
-        const d = localStorage.getItem('etf_default_v9'); 
+        const d = localStorage.getItem('etf_default_v10'); 
         if(d) {
             portfolio = JSON.parse(d); 
         } else {
