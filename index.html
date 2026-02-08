@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>存股現金流規劃 (完全體)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --target-bg: #e3f2fd;
+            --target-text: #1565c0;
+            --success: #27ae60;
+            --warning: #f1c40f;
+            --danger: #c0392b;
+            --text: #333;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 15px;
+            color: var(--text);
+            padding-bottom: 100px;
+            padding-top: 80px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        /* --- 置頂切換列 --- */
+        .top-bar {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: var(--header-height);
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #ddd;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 0 20px;
+        }
+        
+        .mode-switch {
+            background: #e0e0e0; border-radius: 30px; padding: 4px;
+            display: flex; position: relative; cursor: pointer;
+        }
+        .mode-btn {
+            padding: 8px 20px; border-radius: 25px; font-size: 0.95rem; font-weight: bold;
+            color: #666; z-index: 2; transition: color 0.3s; border: none; background: transparent;
+        }
+        .mode-btn.active { color: white; }
+        .mode-indicator {
+            position: absolute; top: 4px; bottom: 4px; width: 50%; border-radius: 25px;
+            background: var(--accent); transition: left 0.3s ease; z-index: 1;
+        }
+
+        /* --- 儀表板 --- */
+        .dashboard {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white; border-radius: 12px; padding: 20px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .dash-item { text-align: center; }
+        .dash-label { font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; }
+        .dash-value { font-size: 1.5rem; font-weight: bold; }
+        .dash-sub { color: #f1c40f; font-size: 0.9rem; }
+
+        /* --- 檢視模式 --- */
+        #view-mode { display: none; }
+        .chart-section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .chart-header { font-weight: bold; color: var(--primary); margin-bottom: 15px; text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        
+        .bar-chart { display: flex; justify-content: space-between; align-items: flex-end; height: 150px; padding-bottom: 5px; gap: 5px; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+        .bar { width: 80%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 4px; opacity: 0.8; }
+        .bar-val { font-size: 0.75rem; color: #555; font-weight: bold; margin-bottom: 4px; }
+        .bar-lbl { font-size: 0.8rem; color: #999; margin-top: 5px; }
+
+        .summary-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .summary-table th { background: #f8f9fa; padding: 12px; text-align: left; color: #666; font-size: 0.9rem; border-bottom: 1px solid #eee; }
+        .summary-table td { padding: 15px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        .stock-name { font-weight: bold; color: var(--primary); font-size: 1rem; }
+        .month-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+        .m-tag { background: #e3f2fd; color: var(--accent); font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+
+        /* --- 編輯模式 --- */
+        #edit-mode { display: block; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; margin-bottom: 20px; }
+
+        /* 卡片標題 */
+        .card-header { background-color: #f8f9fa; padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        .header-title { flex-grow: 1; min-width: 0; }
+        .header-title input { width: 100%; font-size: 1.1rem; font-weight: bold; color: var(--primary); border: none; background: transparent; border-bottom: 1px dashed #ccc; padding: 2px 0; }
+        .header-info { white-space: nowrap; font-size: 0.85rem; color: #666; background: #fff; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+        .input-max-div { width: 50px; border: none; border-bottom: 1px solid #ccc; text-align: center; font-weight: bold; }
+
+        /* 月份與設定 */
+        .month-selector { padding: 10px 15px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .ms-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #ddd; color: #aaa; font-size: 0.7rem; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .ms-btn.active { background: var(--accent); color: white; border-color: var(--accent); font-weight: bold; }
+
+        /* 內容區塊 */
+        .section-current { padding: 15px; }
+        .section-target { background-color: var(--target-bg); padding: 15px; border-top: 1px solid #bbdefb; }
+        
+        .target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .section-title { font-size: 0.9rem; color: #999; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .section-target .section-title { color: var(--target-text); margin-bottom: 0; }
+        
+        .btn-toggle-target { background: white; border: 1px solid #90caf9; color: var(--target-text); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-toggle-target.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .data-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px; }
+        .data-group { display: flex; flex-direction: column; gap: 4px; }
+        .data-group label { font-size: 0.75rem; color: #666; }
+        .input-val { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold; font-size: 1rem; box-sizing: border-box; background: #fff; }
+        .input-val.locked { border: none; background: transparent; color: var(--target-text); pointer-events: none; }
+
+        .result-box { grid-column: span 4; display: flex; justify-content: space-between; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 8px; margin-top: 5px; border: 1px solid rgba(0,0,0,0.05); }
+        .res-item { text-align: center; flex: 1; }
+        .res-val { font-weight: bold; font-size: 1.05rem; display: block; }
+        .tax-warn { color: var(--danger); }
+        .tax-safe { color: var(--success); }
+
+        .btn-del { border: none; background: transparent; color: #aaa; font-size: 1.5rem; cursor: pointer; padding: 0 5px; line-height: 1; }
+        .fab-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 900; }
+        .btn-main { border: none; padding: 10px 24px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; background: var(--accent); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        @media (max-width: 600px) {
+            .data-grid { grid-template-columns: 1fr 1fr; }
+            .result-box { flex-direction: column; gap: 10px; text-align: left; }
+            .res-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+            .res-item:last-child { border-bottom: none; }
+            .card-header { flex-wrap: nowrap; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="mode-switch" onclick="toggleMode()">
+        <div class="mode-indicator" id="modeIndicator" style="left: 4px;"></div>
+        <button class="mode-btn active" id="btnEdit">✏️ 編輯模式</button>
+        <button class="mode-btn" id="btnView">👁️ 檢視模式</button>
+    </div>
+</div>
+
+<div class="container" id="capture-area">
+    
+    <div class="dashboard">
+        <div class="dash-item">
+            <span class="dash-label">現況年領股利 (稅後)</span>
+            <span class="dash-value" id="dashCurrent">$0</span>
+            <div class="dash-sub">平均月領: <span id="dashMonthly">$0</span></div>
+        </div>
+        <div class="dash-item">
+            <span class="dash-label">目標年領股利 (稅後)</span>
+            <span class="dash-value" id="dashTarget" style="color:#f1c40f">$0</span>
+        </div>
+    </div>
+
+    <div id="view-mode">
+        <div class="chart-section">
+            <div class="chart-header">📊 預估每月領息金額</div>
+            <div class="bar-chart" id="barChart"></div>
+        </div>
+        <div style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+            <div class="chart-header" style="padding-top:15px; border:none;">📋 配息總表</div>
+            <table class="summary-table">
+                <thead><tr><th style="width:35%">標的名稱</th><th>配息月份</th><th style="width:25%; text-align:right;">現況年領</th><th style="width:25%; text-align:right; color:#f1c40f;">目標年領</th></tr></thead>
+                <tbody id="summaryTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="edit-mode">
+        <div id="cardList"></div>
+        <p style="text-align:center; font-size:0.8rem; color:#999; margin-top:20px;">
+            *點擊「設定目標」可編輯藍色區域的目標數值。<br>
+            *「檢視模式」可查看詳細圖表與總表。
+        </p>
+    </div>
+
+</div>
+
+<div class="fab-container" id="fabActions">
+    <button class="btn-main" onclick="addNew()">➕ 新增標的</button>
+    <button class="btn-main" style="background:#27ae60" onclick="exportImage()">📷 輸出報表</button>
+</div>
+
+<script>
+    const defaultData = [
+        { 
+            id: 1, name: '00919 群益台灣精選高息', maxDiv: 0.72, 
+            currShares: 10, currPrice: 23.3, currDiv: 0.54,
+            targetShares: 50, targetPrice: 23.0, targetDiv: 0.72,
+            months: [3, 6, 9, 12], isLocked: true 
+        },
+        { 
+            id: 2, name: '00878 國泰永續高股息', maxDiv: 0.55, 
+            currShares: 15, currPrice: 22.8, currDiv: 0.42,
+            targetShares: 60, targetPrice: 22.5, targetDiv: 0.55,
+            months: [2, 5, 8, 11], isLocked: true 
+        },
+        { 
+            id: 3, name: '0056 元大高股息', maxDiv: 1.07, 
+            currShares: 5, currPrice: 37.5, currDiv: 0.86,
+            targetShares: 30, targetPrice: 37.0, targetDiv: 1.0,
+            months: [1, 4, 7, 10], isLocked: true 
+        }
+    ];
+
+    let portfolio = [];
+    let isEditMode = true;
+
+    window.onload = function() {
+        loadData();
+        renderEditMode();
+        renderViewMode(); 
+    };
+
+    function toggleMode() {
+        isEditMode = !isEditMode;
+        const ind = document.getElementById('modeIndicator');
+        const vDiv = document.getElementById('view-mode');
+        const eDiv = document.getElementById('edit-mode');
+        const fab = document.getElementById('fabActions');
+        const bE = document.getElementById('btnEdit');
+        const bV = document.getElementById('btnView');
+
+        if (isEditMode) {
+            ind.style.left = '4px'; bE.classList.add('active'); bV.classList.remove('active');
+            vDiv.style.display = 'none'; eDiv.style.display = 'block'; fab.style.display = 'flex';
+        } else {
+            ind.style.left = '50%'; bE.classList.remove('active'); bV.classList.add('active');
+            vDiv.style.display = 'block'; eDiv.style.display = 'none'; fab.style.display = 'none';
+            renderViewMode();
+        }
+    }
+
+    function renderEditMode() {
+        const container = document.getElementById('cardList');
+        container.innerHTML = '';
+        let totalCurrent = 0; let totalTarget = 0;
+
+        portfolio.forEach((item, index) => {
+            // 現況計算
+            const cG = Math.round(item.currShares * 1000 * item.currDiv);
+            let cTax = 0; if (cG > 20000) cTax = Math.floor(cG * 0.0211);
+            const cNet = cG - cTax;
+            totalCurrent += cNet * item.months.length;
+
+            // 目標計算
+            const tG = Math.round(item.targetShares * 1000 * item.targetDiv);
+            let tTax = 0; if (tG > 20000) tTax = Math.floor(tG * 0.0211);
+            const tNet = tG - tTax;
+            totalTarget += tNet * item.months.length;
+            const tCost = Math.round(item.targetShares * 1000 * item.targetPrice);
+
+            // HTML
+            const div = document.createElement('div');
+            div.className = 'card';
+            
+            let monthBtns = '';
+            for(let i=1; i<=12; i++) {
+                const active = item.months.includes(i) ? 'active' : '';
+                monthBtns += `<div class="ms-btn ${active}" onclick="toggleMonth(${index}, ${i})">${i}</div>`;
+            }
+
+            const lockClass = item.isLocked ? 'locked' : '';
+            const btnText = item.isLocked ? '✏️ 設定目標' : '🔒 鎖定目標';
+            const btnClass = item.isLocked ? '' : 'active';
+
+            div.innerHTML = `
+                <div class="card-header">
+                    <div class="header-title">
+                        <input value="${item.name}" onchange="update(${index}, 'name', this.value)" placeholder="標的名稱">
+                    </div>
+                    <div class="header-info">
+                        <span>🏆 最高:</span>
+                        <input type="number" class="input-max-div" value="${item.maxDiv}" step="0.01" 
+                            onchange="update(${index}, 'maxDiv', this.value)">
+                    </div>
+                    <button class="btn-del" onclick="delItem(${index})">×</button>
+                </div>
+                
+                <div class="month-selector">
+                    <span style="font-size:0.8rem; color:#666;">配息月:</span>
+                    <div style="display:flex; gap:4px; flex-wrap:wrap;">${monthBtns}</div>
+                    <button style="margin-left:auto; font-size:0.7rem; border:1px solid #ddd; background:#eee; border-radius:10px;" onclick="quickSetMonths(${index})">快速</button>
+                </div>
+
+                <div class="section-current">
+                    <div class="section-title">📊 目前進度</div>
+                    <div class="data-grid">
+                        <div class="data-group"><label>張數</label><input class="input-val" type="number" value="${item.currShares}" onchange="update(${index}, 'currShares', this.value)"></div>
+                        <div class="data-group"><label>均價</label><input class="input-val" type="number" value="${item.currPrice}" step="0.1" onchange="update(${index}, 'currPrice', this.value)"></div>
+                        <div class="data-group"><label>配息</label><input class="input-val" type="number" value="${item.currDiv}" step="0.01" onchange="update(${index}, 'currDiv', this.value)"></div>
+                        <div class="data-group"><label>實領</label><input class="input-val" style="border:none; color:${cTax>0?'#c0392b':'#27ae60'}" value="$${cNet}" disabled></div>
+                    </div>
+                    <div class="result-box">
+                        <div class="res-item"><label style="font-size:0.75rem; color:#666;">二代健保</label><span class="res-val ${cTax>0?'tax-warn':'tax-safe'}">${cTax>0?'-$'+cTax:'免稅'}</span></div>
+                    </div>
+                </div>
+
+                <div class="section-target">
+                    <div class="target-header">
+                        <div class="section-title">🎯 未來目標</div>
+                        <button class="btn-toggle-target ${btnClass}" onclick="toggleLock(${index})">${btnText}</button>
+                    </div>
+                    <div class="data-grid">
+                        <div class="data-group"><label>目標張數</label><input class="input-val ${lockClass}" type="number" value="${item.targetShares}" onchange="update(${index}, 'targetShares', this.value)"></div>
+                        <div class="data-group"><label>預估均價</label><input class="input-val ${lockClass}" type="number" value="${item.targetPrice}" step="0.1" onchange="update(${index}, 'targetPrice', this.value)"></div>
+                        <div class="data-group"><label>預估配息</label><input class="input-val ${lockClass}" type="number" value="${item.targetDiv}" step="0.01" onchange="update(${index}, 'targetDiv', this.value)"></div>
+                        <div class="data-group"><label>目標成本</label><input class="input-val locked" value="${(tCost/10000).toFixed(1)}萬" disabled></div>
+                    </div>
+                    <div class="result-box" style="background:rgba(255,255,255,0.8); border-color:#aecbeb;">
+                        <div class="res-item"><label style="font-size:0.75rem; color:#1565c0;">目標實領</label><span class="res-val" style="color:#1565c0;">$${tNet.toLocaleString()}</span></div>
+                        <div class="res-item"><label style="font-size:0.75rem; color:#1565c0;">目標健保</label><span class="res-val ${tTax>0?'tax-warn':'tax-safe'}">${tTax>0?'-$'+tTax:'免稅'}</span></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        document.getElementById('dashCurrent').innerText = "$" + totalCurrent.toLocaleString();
+        document.getElementById('dashMonthly').innerText = "$" + Math.round(totalCurrent/12).toLocaleString();
+        document.getElementById('dashTarget').innerText = "$" + totalTarget.toLocaleString();
+        saveData();
+    }
+
+    function renderViewMode() {
+        const chart = document.getElementById('barChart');
+        const tbody = document.getElementById('summaryTableBody');
+        chart.innerHTML = ''; tbody.innerHTML = '';
+        
+        let monthlySum = new Array(13).fill(0);
+        
+        portfolio.forEach(item => {
+            const cG = Math.round(item.currShares * 1000 * item.currDiv);
+            let cTax = 0; if (cG > 20000) cTax = Math.floor(cG * 0.0211);
+            const cNet = cG - cTax;
+            item.months.forEach(m => monthlySum[m] += cNet);
+            
+            const annual = cNet * item.months.length;
+            
+            // 目標年領
+            const tG = Math.round(item.targetShares * 1000 * item.targetDiv);
+            let tTax = 0; if (tG > 20000) tTax = Math.floor(tG * 0.0211);
+            const tNet = tG - tTax;
+            const tAnnual = tNet * item.months.length;
+
+            const tr = document.createElement('tr');
+            let mTags = item.months.sort((a,b)=>a-b).map(m => `<span class="m-tag">${m}月</span>`).join('');
+            if (item.months.length === 0) mTags = '<span style="color:#ccc; font-size:0.8rem;">-</span>';
+            
+            tr.innerHTML = `
+                <td><div class="stock-name">${item.name}</div></td>
+                <td><div class="month-tags">${mTags}</div></td>
+                <td><div class="year-income">$${annual.toLocaleString()}</div></td>
+                <td><div class="year-income" style="color:#f1c40f;">$${tAnnual.toLocaleString()}</div></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        const maxVal = Math.max(...monthlySum.slice(1));
+        for(let i=1; i<=12; i++) {
+            const val = monthlySum[i];
+            const h = maxVal > 0 ? (val / maxVal) * 80 + 10 : 5;
+            const dVal = val > 0 ? (val/1000).toFixed(0)+'k' : '';
+            const bg = val > 0 ? 'var(--accent)' : '#eee';
+            
+            const col = document.createElement('div');
+            col.className = 'bar-col';
+            col.innerHTML = `<div class="bar-val">${dVal}</div><div class="bar" style="height:${val > 0 ? h : 4}%; background:${bg}"></div><div class="bar-lbl">${i}月</div>`;
+            chart.appendChild(col);
+        }
+    }
+
+    function update(i, k, v) { if(k==='name') portfolio[i][k]=v; else portfolio[i][k]=parseFloat(v)||0; renderEditMode(); }
+    function toggleMonth(i, m) { const idx = portfolio[i].months.indexOf(m); if(idx>-1) portfolio[i].months.splice(idx,1); else portfolio[i].months.push(m); renderEditMode(); }
+    function toggleLock(i) { portfolio[i].isLocked = !portfolio[i].isLocked; renderEditMode(); }
+    function quickSetMonths(i) {
+        const p = portfolio[i]; const s=[1,4,7,10], s2=[2,5,8,11], s3=[3,6,9,12];
+        const c = JSON.stringify(p.months.sort());
+        if(c==JSON.stringify(s)) p.months=s2; else if(c==JSON.stringify(s2)) p.months=s3; else if(c==JSON.stringify(s3)) p.months=[1,2,3,4,5,6,7,8,9,10,11,12]; else p.months=s;
+        renderEditMode();
+    }
+    function addNew() { portfolio.push({ id: Date.now(), name: '新標的', maxDiv: 0, currShares: 0, currPrice: 0, currDiv: 0, targetShares: 0, targetPrice: 0, targetDiv: 0, months: [], isLocked: false }); renderEditMode(); setTimeout(()=>window.scrollTo(0, document.body.scrollHeight),100); }
+    function delItem(i) { if(confirm("確定刪除？")) { portfolio.splice(i,1); renderEditMode(); } }
+    function saveData() { localStorage.setItem('etf_full_v2', JSON.stringify(portfolio)); }
+    function loadData() { const d = localStorage.getItem('etf_full_v2'); if(d) portfolio = JSON.parse(d); else portfolio = JSON.parse(JSON.stringify(defaultData)); }
+    function exportImage() { 
+        const fab = document.getElementById('fabActions'); fab.style.display='none';
+        html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#f0f2f5" }).then(c => {
+            const l = document.createElement('a'); l.download = `存股規劃_${new Date().toISOString().slice(0,10)}.png`; l.href = c.toDataURL(); l.click(); fab.style.display='flex';
+        });
+    }
+</script>
+
+</body>
+</html>
